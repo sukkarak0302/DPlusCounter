@@ -29,8 +29,7 @@ MD_MAX72XX mx[2] = {MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES),
 
 RTC_DS3231 rtc;
 DateTime currentTime;
-//DateTime referenceDay(2024, 9, 24, 00, 00, 00);
-DateTime referenceDay(2024, 8, 5, 00, 00, 00);
+DateTime referenceDay(2024, 8, 24, 00, 00, 00);
 
 // Global message buffers shared by Serial and Scrolling functions
 #define BUF_SIZE  75
@@ -93,26 +92,34 @@ void loop()
     case 0 :
       firstCycleFlag = firstCycle();
       currentTime = rtc.now();
+#if defined(DEBUG_ON)
       Serial.println("case0");
+#endif
       curState++;
       break;
     
     // Date calendar
     case 1 : 
       dateCalendar();
+#if defined(DEBUG_ON)
       Serial.println("case1");
+#endif
       break;
 
     // D++ counter init
     case 2 : 
       dayPlusCounter();
+#if defined(DEBUG_ON)
       Serial.println("case2");
+#endif
       break;
     
     // Do nothing
     case 3 : 
-      // Do nothing    
+      // Do nothing
+#if defined(DEBUG_ON)
       Serial.println("case3");
+#endif
       break;
 
     // Other case, go to default mode. Date calendar
@@ -325,7 +332,24 @@ void ledPrintPage2()
   char printL2[6]{};
   char input[6] = { char(deltaDay/10000) + offset, char((deltaDay/1000) - (deltaDay/10000) * 10 ) + offset, char((deltaDay/100) - (deltaDay/1000) * 10) + offset, char((deltaDay/10) - (deltaDay/100) * 10) + offset, char(deltaDay - (deltaDay/10) * 10) + offset };
   removeZero(&input[0], &printL2[0]);
-  printL2[0] = 'D';
+  if(deltaDay < 10000 && deltaDay > 0)
+  {
+    printL2[0] = 'D';
+  }
+  else if(deltaDay >= 10000)
+  {
+    // Not using 'D' in the beginning for the 5 digit display
+  }
+  else 
+  {
+    // set '0' if minus or out of boundary
+    printL2[0] = 'D';
+    printL2[1] = ' ';
+    printL2[2] = ' ';
+    printL2[3] = ' ';
+    printL2[4] = '0';
+    printL2[5] = '\0';
+  }
 
   printText(mx[0], 0, MAX_DEVICES-1, &printL1[0],2);
   printText(mx[1], 0, MAX_DEVICES-1, &printL2[0],2);
